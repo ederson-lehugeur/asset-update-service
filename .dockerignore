@@ -1,0 +1,7 @@
+target
+.idea
+.git
+.kiro
+.mvn/wrapper/maven-wrapper.jar
+*.md
+docker

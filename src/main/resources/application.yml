@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: asset-update-service
+
+  jackson:
+    time-zone: ${TZ:America/Sao_Paulo}
+
+  # RabbitMQ Configuration (Req 7.1)
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: ${RABBITMQ_LISTENER_PREFETCH:10}
+        concurrency: ${RABBITMQ_LISTENER_CONCURRENCY:1}
+        max-concurrency: ${RABBITMQ_LISTENER_MAX_CONCURRENCY:3}
+
+  # MySQL Datasource Configuration (Req 2.1, 2.2, 2.3)
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3307}/${MYSQL_DATABASE:investalert}
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+
+  sql:
+    init:
+      mode: never
+
+rabbitmq:
+  queue:
+    asset-update: invest.assets.update.queue
+
+# Logging with correlationId (Req 6.2)
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{correlationId}] %-5level %logger{36} - %msg%n"
