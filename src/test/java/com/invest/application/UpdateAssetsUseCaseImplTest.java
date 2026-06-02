@@ -2,6 +2,7 @@ package com.invest.application;
 
 import com.invest.domain.PriceVariationEngine;
 import com.invest.domain.entities.Asset;
+import com.invest.domain.entities.enumerator.IndicatorType;
 import com.invest.domain.events.UpdateAssetsEvent;
 import com.invest.domain.ports.out.AssetPriceProvider;
 import com.invest.domain.ports.out.AssetRepository;
@@ -14,7 +15,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,14 +51,21 @@ class UpdateAssetsUseCaseImplTest {
     }
 
     private Asset asset(String ticker) {
-        return new Asset(1L, ticker, BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ONE);
+        Map<IndicatorType, BigDecimal> indicators = new EnumMap<>(IndicatorType.class);
+        indicators.put(IndicatorType.PRICE, BigDecimal.TEN);
+        indicators.put(IndicatorType.DIVIDEND_YIELD, BigDecimal.ONE);
+        indicators.put(IndicatorType.PVP, BigDecimal.ONE);
+        return new Asset(1L, ticker, indicators);
     }
 
     private Asset updatedAsset(String ticker) {
-        return new Asset(1L, ticker, new BigDecimal("10.03"), new BigDecimal("1.01"), new BigDecimal("1.01"));
+        Map<IndicatorType, BigDecimal> indicators = new EnumMap<>(IndicatorType.class);
+        indicators.put(IndicatorType.PRICE, new BigDecimal("10.03"));
+        indicators.put(IndicatorType.DIVIDEND_YIELD, new BigDecimal("1.01"));
+        indicators.put(IndicatorType.PVP, new BigDecimal("1.01"));
+        return new Asset(1L, ticker, indicators);
     }
 
-    // Validates: Requirements 8.4, 8.5
     @Test
     @DisplayName("Happy path: all tickers exist and update successfully")
     void allTickersExistAndUpdateSuccessfully() {
@@ -76,7 +86,6 @@ class UpdateAssetsUseCaseImplTest {
         verify(assetRepository, times(3)).save(any(Asset.class));
     }
 
-    // Validates: Requirements 2.3, 4.3
     @Test
     @DisplayName("Ticker not found: missing tickers count as failures, others succeed")
     void tickerNotFoundCountsAsFailure() {
@@ -97,7 +106,6 @@ class UpdateAssetsUseCaseImplTest {
         verify(assetRepository, times(2)).save(any(Asset.class));
     }
 
-    // Validates: Requirements 5.2, 6.3
     @Test
     @DisplayName("Optimistic lock retry success: first attempt throws, second succeeds")
     void optimisticLockRetrySucceeds() {
@@ -118,7 +126,6 @@ class UpdateAssetsUseCaseImplTest {
         verify(assetRepository, times(2)).save(any(Asset.class));
     }
 
-    // Validates: Requirements 6.3
     @Test
     @DisplayName("Optimistic lock retry exhaustion: all 3 attempts fail counts as failure")
     void optimisticLockRetryExhaustion() {
@@ -138,7 +145,6 @@ class UpdateAssetsUseCaseImplTest {
         verify(assetRepository, times(3)).save(any(Asset.class));
     }
 
-    // Validates: Requirements 2.3, 4.3, 8.5
     @Test
     @DisplayName("Mixed scenario: some succeed, some not found, some fail with exception")
     void mixedScenario() {
@@ -165,7 +171,6 @@ class UpdateAssetsUseCaseImplTest {
         assertThat(result.successCount() + result.failureCount()).isEqualTo(3);
     }
 
-    // Validates: Requirements 8.1, 8.2
     @Test
     @DisplayName("Empty ticker list: returns ProcessingResult(0, 0)")
     void emptyTickerListReturnsZeroCounts() {
@@ -177,7 +182,6 @@ class UpdateAssetsUseCaseImplTest {
         verify(assetRepository, never()).save(any());
     }
 
-    // Validates: Requirements 8.1, 8.2, 8.4
     @Test
     @DisplayName("Variation engine and repository are called for each existing ticker")
     void variationEngineAndRepositoryCalledPerTicker() {
