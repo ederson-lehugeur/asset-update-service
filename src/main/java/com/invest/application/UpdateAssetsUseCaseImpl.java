@@ -64,11 +64,7 @@ public class UpdateAssetsUseCaseImpl implements UpdateAssetsUseCase {
                 Asset currentAsset = optionalAsset.get();
                 Asset updatedAsset = priceVariationEngine.applyVariation(currentAsset);
 
-                log.info("Updating ticker {}: price {} -> {}, dividendYield {} -> {}, pvp {} -> {}",
-                        ticker,
-                        currentAsset.getPrice(), updatedAsset.getPrice(),
-                        currentAsset.getDividendYield(), updatedAsset.getDividendYield(),
-                        currentAsset.getPvp(), updatedAsset.getPvp());
+                log.info("Updating ticker {}: indicators {}", ticker, updatedAsset.getIndicators());
 
                 assetRepository.save(updatedAsset);
                 return;

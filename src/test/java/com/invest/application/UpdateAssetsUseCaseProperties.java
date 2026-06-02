@@ -2,42 +2,31 @@ package com.invest.application;
 
 import com.invest.domain.PriceVariationEngine;
 import com.invest.domain.entities.Asset;
+import com.invest.domain.entities.enumerator.IndicatorType;
 import com.invest.domain.events.UpdateAssetsEvent;
 import com.invest.domain.ports.out.AssetPriceProvider;
 import com.invest.domain.ports.out.AssetRepository;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
-import net.jqwik.api.Combinators;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
 import net.jqwik.api.Tag;
-import net.jqwik.api.Tuple;
 
 import java.math.BigDecimal;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class UpdateAssetsUseCaseProperties {
 
-    /**
-     * Validates: Requirements 2.3, 4.3
-     *
-     * For any list of tickers where some exist and some don't,
-     * the use case still updates all non-failing assets.
-     * successCount + failureCount == total tickers.
-     * successCount == number of existing tickers.
-     * failureCount == number of non-existing tickers.
-     */
     @Property(tries = 100)
     @Tag("Feature: asset-update-service, Property 4: Per-asset isolation")
     void perAssetIsolation(@ForAll("tickerScenarios") TickerScenario scenario) {
@@ -47,7 +36,11 @@ class UpdateAssetsUseCaseProperties {
 
         for (String ticker : scenario.tickers()) {
             if (scenario.existingTickers().contains(ticker)) {
-                Asset asset = new Asset(1L, ticker, BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ONE);
+                Map<IndicatorType, BigDecimal> indicators = new EnumMap<>(IndicatorType.class);
+                indicators.put(IndicatorType.PRICE, BigDecimal.TEN);
+                indicators.put(IndicatorType.DIVIDEND_YIELD, BigDecimal.ONE);
+                indicators.put(IndicatorType.PVP, BigDecimal.ONE);
+                Asset asset = new Asset(1L, ticker, indicators);
                 when(priceProvider.fetchByTicker(ticker)).thenReturn(Optional.of(asset));
             } else {
                 when(priceProvider.fetchByTicker(ticker)).thenReturn(Optional.empty());
